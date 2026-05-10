@@ -1,20 +1,25 @@
+import cors from "cors";
 import express from "express";
 import connectDB from "./config/db.js";
+import taskRoutes from "./routes/taskRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
-// connect database
 connectDB();
 
-// middleware
+app.use(cors());
 app.use(express.json());
 
-// test route
+app.use("/", taskRoutes);
+app.use("/", authRoutes);
+
 app.get("/", (req, res) => {
-  res.send("API Running ");
+  res.send("API Running 🚀");
 });
 
-// server start
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

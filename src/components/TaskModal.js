@@ -1,4 +1,4 @@
-function TaskModal({ title, desc, setTitle, setDesc, addTask, close }) {
+function TaskModal({ title, desc, setTitle, setDesc, addTask, close, loading }) {
   return (
     <div className="modal">
       <div className="modal-content">
@@ -16,7 +16,9 @@ function TaskModal({ title, desc, setTitle, setDesc, addTask, close }) {
           placeholder="Description"
         />
 
-        <button onClick={addTask}>Save</button>
+        <button onClick={addTask}>
+          {loading ? "Saving..." : "Save"}
+        </button>
         <button onClick={close}>Cancel</button>
       </div>
     </div>
