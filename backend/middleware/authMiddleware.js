@@ -16,7 +16,10 @@ const authMiddleware = (req, res, next) => {
       "mysecretkey"
     );
 
-    req.user = decoded;
+      req.user = {
+      id: decoded.id,
+      role: decoded.role,
+    };
 
     next();
 

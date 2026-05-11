@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
@@ -21,58 +21,74 @@ function App() {
   const [desc, setDesc] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const [search, setSearch] = useState("");
+
+  const [sort, setSort] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [totalPages, setTotalPages] = useState(1);
 
   // ✅ Auto Login
-  useEffect(() => {
-
+useEffect(() => {
   const token = localStorage.getItem("token");
+  const savedUser = localStorage.getItem("user");
 
-  if (token) {
-
+  if (token && savedUser) {
+    setCurrentUser(JSON.parse(savedUser));
     setPage("dashboard");
-
   } else {
-
+    setCurrentUser(null);
     setPage("login");
   }
-
 }, []);
 
-  // ✅ Fetch Tasks
-  useEffect(() => {
-    fetchTasks();
-  }, []);
+      // ✅ Fetch Tasks
 
-  const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
+      setLoading(true);
 
-    try {
+   try {
 
-      const response = await fetch(
-        "http://localhost:5000/tasks",
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        }
-      );
-      if (response.status === 401) {
+    const response = await fetch(
+      `http://localhost:5000/tasks?page=${currentPage}&status=${statusFilter}&search=${search}&sort=${sort}`,
+      {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+        },
+      }
+    );
 
-  localStorage.removeItem("token");
+    if (response.status === 401) {
 
-  setPage("login");
+      localStorage.removeItem("token");
 
-  alert("Session Expired");
-}
+      setPage("login");
 
-      const data = await response.json();
+      alert("Session Expired");
 
-      setTasks(data);
-
-    } catch (error) {
-
-      console.log(error);
+      return;
     }
-  };
+
+    const data = await response.json();
+
+    setTasks(data.tasks);
+
+    setTotalPages(data.totalPages);
+
+  } catch (error) {
+
+  setError("Something went wrong");
+  console.log(error);
+  } finally {
+    setLoading(false); // ✅ ALWAYS HERE
+  }
+
+}, [currentPage, statusFilter, search, sort]);
 
   // ✅ Form Input Change
   const handleChange = (e) => {
@@ -142,6 +158,7 @@ function App() {
           }
 
         } catch (error) {
+          setError("Something went wrong");
 
           console.log(error);
         }
@@ -177,6 +194,11 @@ function App() {
 
             localStorage.setItem("token", data.token);
 
+            localStorage.setItem(
+              "user",
+              JSON.stringify(data.user)
+            );
+
             setCurrentUser(data.user);
 
             setPage("dashboard");
@@ -187,6 +209,7 @@ function App() {
           }
 
         } catch (error) {
+          setError("Something went wrong");
 
           console.log(error);
         }
@@ -205,32 +228,34 @@ function App() {
 
     try {
 
-     const response = await fetch(
-  "http://localhost:5000/tasks",
-  {
-    method: "POST",
+      const response = await fetch(
+        "http://localhost:5000/tasks",
+        {
+          method: "POST",
 
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: localStorage.getItem("token"),
-    },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("token"),
+          },
 
-    body: JSON.stringify({
-      title,
-      description: desc,
-      status: "Pending",
-    }),
-  }
-);
+          body: JSON.stringify({
+            title,
+            description: desc,
+            status: "Pending",
+          }),
+        }
+      );
 
-if (response.status === 401) {
+      if (response.status === 401) {
 
-  localStorage.removeItem("token");
+        localStorage.removeItem("token");
 
-  setPage("login");
+        setPage("login");
 
-  alert("Session Expired");
-}
+        alert("Session Expired");
+
+        return;
+      }
 
       fetchTasks();
 
@@ -240,11 +265,12 @@ if (response.status === 401) {
       setShowModal(false);
 
     } catch (error) {
+      setError("Something went wrong");
 
       console.log(error);
-    }
-
-    setLoading(false);
+    } finally {
+    setLoading(false); 
+  }
   };
 
   // ✅ Delete Task
@@ -253,31 +279,36 @@ if (response.status === 401) {
     try {
 
       const response = await fetch(
-  `http://localhost:5000/tasks/${id}`,
-  {
-    method: "DELETE",
+        `http://localhost:5000/tasks/${id}`,
+        {
+          method: "DELETE",
 
-    headers: {
-      Authorization: localStorage.getItem("token"),
-    },
-  }
-);
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        }
+      );
 
-if (response.status === 401) {
+      if (response.status === 401) {
 
-  localStorage.removeItem("token");
+        localStorage.removeItem("token");
 
-  setPage("login");
+        setPage("login");
 
-  alert("Session Expired");
-}
+        alert("Session Expired");
+
+        return;
+      }
 
       fetchTasks();
 
     } catch (error) {
+      setError("Something went wrong");
 
       console.log(error);
-    }
+    } finally {
+    setLoading(false); 
+  }
   };
 
   // ✅ Update Task
@@ -285,51 +316,60 @@ if (response.status === 401) {
 
     try {
 
-     const response = await fetch(
-  `http://localhost:5000/tasks/${id}`,
-  {
-    method: "PUT",
+      const response = await fetch(
+        `http://localhost:5000/tasks/${id}`,
+        {
+          method: "PUT",
 
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: localStorage.getItem("token"),
-    },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("token"),
+          },
 
-    body: JSON.stringify({
-      status: "Completed",
-    }),
-  }
-);
+          body: JSON.stringify({
+            status: "Completed",
+          }),
+        }
+      );
 
-if (response.status === 401) {
+      if (response.status === 401) {
 
-  localStorage.removeItem("token");
+        localStorage.removeItem("token");
 
-  setPage("login");
+        setPage("login");
 
-  alert("Session Expired");
-}
+        alert("Session Expired");
+
+        return;
+      }
 
       fetchTasks();
 
     } catch (error) {
+      setError("Something went wrong");
 
       console.log(error);
-    }
+    } finally {
+    setLoading(false); 
+  }
   };
 
-  // ✅ Logout
-  const logout = () => {
+    // ✅ Logout
+    const logout = () => {
 
+    // ✅ Remove token
     localStorage.removeItem("token");
+
+    // ✅ Remove saved user
+    localStorage.removeItem("user");
 
     setCurrentUser(null);
 
     setPage("login");
   };
 
-  return (
-    <>
+    return (
+      <>
 
       {page === "login" && (
         <Login
@@ -349,8 +389,7 @@ if (response.status === 401) {
         />
       )}
 
-      {page === "dashboard" &&
-         localStorage.getItem("token") && (
+      {page === "dashboard" && currentUser && (
         <Dashboard
           currentUser={currentUser}
           tasks={tasks}
@@ -365,6 +404,22 @@ if (response.status === 401) {
           setDesc={setDesc}
           logout={logout}
           loading={loading}
+
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+
+          search={search}
+          setSearch={setSearch}
+
+          sort={sort}
+          setSort={setSort}
+
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+
+          totalPages={totalPages}
+          error={error}
+          
         />
       )}
 

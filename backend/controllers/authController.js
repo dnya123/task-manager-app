@@ -2,8 +2,9 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
+    console.log("User Registered");
     const { name, email, password } = req.body;
 
     // Validation
@@ -32,22 +33,25 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-        name,
-        email,
-        password: hashedPassword,
+      name,
+      email,
+      password: hashedPassword,
+
+      // default role
+      role: "user",
     });
 
     res.status(201).json(user);
 
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+
+    next(error);
+    }
 };
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res,next) => {
   try {
+    console.log("User Logged In");
     const { email, password } = req.body;
 
     // Check user
@@ -72,7 +76,10 @@ export const loginUser = async (req, res) => {
     }
 
    const token = jwt.sign(
-  { id: user._id },
+  {
+  id: user._id,
+  role: user.role,
+},
   "mysecretkey",
   { expiresIn: "1d" }
 );
@@ -84,8 +91,7 @@ res.status(200).json({
 });
 
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+
+    next(error);
   }
 };

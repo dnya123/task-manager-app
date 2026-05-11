@@ -1,76 +1,193 @@
+import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+import TaskCard from "./TaskCard";
 import TaskModal from "./TaskModal";
+import AdminDashboard from "./AdminDashboard";
+import React from "react";
 
-function Dashboard({ currentUser, tasks, deleteTask,  updateTask, showModal, setShowModal, addTask, title, setTitle, desc, setDesc, logout, loading }) {
+function Dashboard({
+  currentUser,
+  tasks,
+  deleteTask,
+  updateTask,
+  showModal,
+  setShowModal,
+  addTask,
+  title,
+  setTitle,
+  desc,
+  setDesc,
+  logout,
+  loading,
+  statusFilter,
+  setStatusFilter,
+  search,
+  setSearch,
+  sort,
+  setSort,
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  error,
+}) {
+
   return (
-    <div className="dashboard" style={{ display: "flex" }}>
-  <div
-  className="sidebar"
-  style={{
-    width: "220px",
-    background: "#2c2c2c",
-    color: "white",
-    padding: "20px",
-    position: "fixed",
-    height: "100vh",
-    top: 0,
-    left: 0,
-  }}
->
-        <h2>Menu</h2>
-        <p>Dashboard</p>
-        <p>Tasks</p>
-        <button
-  onClick={logout}
-  style={{
-    marginTop: "20px",
-    padding: "10px",
-    background: "red",
-    color: "white",
-    border: "none",
-    cursor: "pointer",
-  }}
->
-  Logout
-</button>
-      </div>
+    <div style={{ display: "flex" }}>
 
-      <div className="main" style={{ flex: 1, marginLeft: "240px", padding: "30px" }}>
-        <h1>Welcome {currentUser?.name} </h1>
+      <Sidebar logout={logout} />
 
-        <button className="add-btn" onClick={() => setShowModal(true)}>
-            Add Task
-        </button>
-        {tasks.length === 0 && <p>No Tasks Found</p>}
-        {tasks.map((task, index) => (
-          <div key={index} className="task">
-            <h3>{task.title}</h3>
-            <p>{task.description}</p>
-            <p>Status: {task.status}</p>
-            <button className="delete-btn"onClick={() => deleteTask(task._id)}>
-                Delete
-            </button>
-            {task.status !== "Completed" && (
-             <button
-  onClick={() => updateTask(task._id)}
-  style={{
-    backgroundColor: "green",
-    color: "white",
-    border: "none",
-    padding: "8px 14px",
-    borderRadius: "5px",
-    cursor: "pointer",
-    marginLeft: "10px",
-  }}
->
-  Complete
-</button>
-             
-)}
+      <div
+        style={{
+          flex: 1,
+          marginLeft: "240px",
+          padding: "30px",
+        }}
+      >
+
+        {/* ✅ Loading State */}
+        {loading && (
+          <h2>Loading...</h2>
+        )}
+
+        {/* ✅ Error State */}
+        {error && (
+          <p
+            style={{
+              color: "red",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <Navbar
+          currentUser={currentUser}
+          setShowModal={setShowModal}
+        />
+
+          {currentUser?.role === "admin" && (
+          <AdminDashboard />
+        )}
+
+        {/* ✅ Filters */}
+
+        <div style={{ marginBottom: "20px" }}>
+
+          <input
+            type="text"
+            placeholder="Search Task"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "8px",
+              marginRight: "10px",
+            }}
+          />
+
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value)
+            }
+            style={{
+              padding: "8px",
+              marginRight: "10px",
+            }}
+          >
+            <option value="">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            style={{
+              padding: "8px",
+            }}
+          >
+            <option value="">Sort</option>
+            <option value="new">Newest</option>
+            <option value="old">Oldest</option>
+          </select>
+
+        </div>
+
+        {/* ✅ Empty State */}
+
+        {!loading && tasks.length === 0 && (
+
+          <div
+            style={{
+              padding: "20px",
+              background: "#f5f5f5",
+              borderRadius: "10px",
+              textAlign: "center",
+            }}
+          >
+
+            <h3>No Tasks Found</h3>
+
+            <p>Create your first task</p>
+
           </div>
+
+        )}
+
+        {/* ✅ Tasks */}
+
+        {tasks?.map((task) => (
+
+          <TaskCard
+            key={task._id}
+            task={task}
+            deleteTask={deleteTask}
+            updateTask={updateTask}
+          />
+
         ))}
+
+        {/* ✅ Pagination */}
+
+        <div style={{ marginTop: "20px" }}>
+
+          <button
+             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+             disabled={currentPage === 1}
+            style={{
+              padding: "8px 12px",
+              marginRight: "10px",
+            }}
+          >
+            Previous
+          </button>
+
+          <span style={{ margin: "0 10px" }}>
+            Page {currentPage}
+          </span>
+
+          <button
+            onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+            style={{
+              padding: "8px 12px",
+              marginLeft: "10px",
+            }}
+          >
+            Next
+          </button>
+
+        </div>
+
       </div>
+
+      {/* ✅ Modal */}
 
       {showModal && (
+
         <TaskModal
           title={title}
           desc={desc}
@@ -80,9 +197,11 @@ function Dashboard({ currentUser, tasks, deleteTask,  updateTask, showModal, set
           close={() => setShowModal(false)}
           loading={loading}
         />
+
       )}
+
     </div>
   );
 }
 
-export default Dashboard;
+export default React.memo(Dashboard);
