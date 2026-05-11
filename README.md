@@ -1,74 +1,37 @@
-# Student Task Manager
+# 📝 Task Manager App (MERN Stack)
 
-## Features
-- User Registration
-- User Login
-- JWT Authentication
-- Add Task
-- Update Task
-- Delete Task
-- User-specific Tasks
-- Logout
+A full-stack Task Management System built using the MERN stack (MongoDB, Express, React, Node.js).  
+It includes authentication, role-based access, and full CRUD functionality for managing tasks.
 
 ---
 
-## API Endpoints
+##  Features
 
-### Auth APIs
+###  Authentication
+- User Registration & Login
+- JWT-based authentication
+- Secure password hashing using bcrypt
+- Persistent login using localStorage
 
-POST /auth/register
-POST /auth/login
+###  User Management
+- Role-based access control (Admin / User)
+- Each user sees only their own tasks
 
-### Task APIs
+###  Task Management
+- Create new tasks
+- Update task status (Pending → Completed)
+- Delete tasks
+- View task list
 
-GET /tasks
-POST /tasks
-PUT /tasks/:id
-DELETE /tasks/:id
-
----
-
-## User Schema
-
-```js
-{
-  name: String,
-  email: String,
-  password: String,
-  createdAt: Date
-}
-```
+###  Advanced Features
+- Search tasks by title
+- Filter by status (Pending / Completed)
+- Sort tasks (Newest / Oldest)
+- Pagination support
+- Logout functionality
 
 ---
 
-## Task Schema
+##  API Endpoints
 
-```js
-{
-  title: String,
-  description: String,
-  status: String,
-  userId: ObjectId,
-  createdAt: Date
-}
-```
-
----
-
-## Architecture
-
-Frontend (React)
-↓
-Backend (Node + Express)
-↓
-MongoDB Database
-
----
-
-## Future Improvements
-
-- Task deadlines
-- Task priority
-- Search functionality
-- Notifications
-- Dark mode
+###  Auth Routes
